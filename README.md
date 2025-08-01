@@ -1,8 +1,8 @@
-# facilities4developers
+# Índice de scripts Python
 
-Repositorio de scripts para facilitar la vida del desarrollador
+### 📁 0controladordeversiones (v1.0)
+- **Archivo principal:** `0controladordeversiones.py`
+- **Descripción:** Script que observa una carpeta y renombra automáticamente archivos copiados que contienen `" copy"` en su nombre, generando versiones numeradas del tipo `_v001`, `_v002`, etc. Útil para entornos donde se generan duplicados y se necesita control de versiones automatizado.
 
+======== SEPARACION ========
 
-## 0controladordeversiones
-
-Script a utilizar en la fase de prototipado para hacer un control de versiones local de forma rapida
