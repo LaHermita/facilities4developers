@@ -2,6 +2,7 @@
 ================================================================================
 copia_seguridad_docker.ps1 V1.0
 
+Descripción:
 Este script realiza una copia de seguridad comprimida (.zip) de una carpeta 
 especificada (o de la carpeta actual si no se indica ninguna), deteniendo 
 temporalmente un servicio Docker Compose antes del proceso y reiniciándolo 
@@ -15,15 +16,11 @@ Funcionalidad:
 - Reinicia el servicio Docker Compose una vez finalizado el backup.
 - Valida si el archivo de respaldo se ha creado correctamente.
 
-Uso y ejemplo:
-Ejecutar sin parámetros (usa carpeta actual):
+Uso:
     .\copia_seguridad_docker.ps1
 
-Ejecutar con carpeta específica:
+Ejemplo:
     .\copia_seguridad_docker.ps1 "E:\DockersDevel\wordpresscactele"
-
-Posibles mejoras:
-- Revisar que pueda parar cualquier docker o facilitar parametro del nombre del docker
 
 ================================================================================
 #>

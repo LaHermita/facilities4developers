@@ -2,6 +2,7 @@
 """
 0controladordeversiones.py V1.1
 
+Descripción:
 Script para observar una carpeta y renombrar automáticamente archivos copiados
 que contienen " copy" en su nombre. Genera versiones numeradas del tipo _cv001, _cv002, etc.
 
