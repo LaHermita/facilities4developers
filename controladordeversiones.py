@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-0controladordeversiones.py V1.1
+controladordeversiones.py V1.1
 
 Descripción:
 Script para observar una carpeta y renombrar automáticamente archivos copiados
@@ -14,11 +14,6 @@ Funcionalidad:
 - Permite pasar la ruta a observar como argumento. Si no se pasa, usa la carpeta actual.
 - Se puede cerrar de forma segura con Ctrl+C.
 
-Uso:
-    python 0controladordeversiones.py [ruta/opcional]
-
-Ejemplo:
-    python 0controladordeversiones.py /mi/proyecto
 """
 
 import os

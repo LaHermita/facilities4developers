@@ -16,12 +16,6 @@ Funcionalidad:
 - Reinicia el servicio Docker Compose una vez finalizado el backup.
 - Valida si el archivo de respaldo se ha creado correctamente.
 
-Uso:
-    .\copia_seguridad_docker.ps1
-
-Ejemplo:
-    .\copia_seguridad_docker.ps1 "E:\DockersDevel\wordpresscactele"
-
 ================================================================================
 #>
 
