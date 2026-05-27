@@ -1,3 +1,20 @@
+"""
+Generador de índice de scripts desde READMEs
+
+Versión: 1.0.0
+
+Descripción:
+Genera el README.md principal del repositorio extrayendo información de los archivos *_README.md de cada script o, como fallback, de sus cabeceras internas.
+
+Dependencias:
+- os
+- re
+- typing
+
+Uso:
+python x-generar_indice-proyectos-extraido-readmes.py
+"""
+
 import os
 import re
 from typing import Dict, List, Optional
@@ -64,15 +81,20 @@ El objetivo es mantener una biblioteca de scripts **reutilizables** y **bien doc
 """
 
 # Detecta bloques de cabecera en Python ("""...""") y PowerShell (<#...#>)
-HEADER_PATTERN = re.compile(r'("""[\s\S]*?""")|(<#([\s\S]*?)#>)', re.MULTILINE)
+HEADER_PATTERN = re.compile(
+    r'"""([\s\S]*?)"""'               # Python docstring (inner content)
+    r'|<#([\s\S]*?)#>'                 # PowerShell comment block (inner content)
+    r'|^#={3,}\n?([\s\S]*?)\n?^#={3,}',# Bash separator block (inner content)
+    re.MULTILINE
+)
 
 # Regex para extraer información
 NAME_VERSION_PATTERN = re.compile(r'V(?:ersión:?)?\s*(\d+\.\d+(?:\.\d+)?)', re.IGNORECASE)
-DESCRIPCION_PATTERN = re.compile(r'(?:##?.*Descripción[:\s]*|Descripción[:\s]*)\n(.*?)(?=\n\s*##?[^#]|\nFuncionalidad|\nUso|\nEjecución|\nEjemplo|\nDependencias|\nRequisitos|$)', re.DOTALL | re.IGNORECASE)
-USO_PATTERN = re.compile(r'(?:##?.*(?:Uso|Ejecución)[:\s]*|(?:Uso|Ejecución)[:\s]*)\n(.*?)(?=\n\s*##?[^#]|\nEjemplo|\nDependencias|\nRequisitos|$)', re.DOTALL | re.IGNORECASE)
-EJEMPLO_PATTERN = re.compile(r'(?:##?.*Ejemplo[:\s]*|Ejemplo[:\s]*)\n(.*?)(?=\n\s*##?[^#]|\nDependencias|\nRequisitos|$)', re.DOTALL | re.IGNORECASE)
-DEPENDENCIAS_PATTERN = re.compile(r'(?:##?.*Dependencias?[:\s]*|Dependencias?[:\s]*)\n(.*?)(?=\n\s*##?[^#]|\nRequisitos|$)', re.DOTALL | re.IGNORECASE)
-REQUISITOS_PATTERN = re.compile(r'(?:##?.*Requisitos?[:\s]*|Requisitos?[:\s]*)\n(.*?)(?=\n\s*##?[^#]|$)', re.DOTALL | re.IGNORECASE)
+DESCRIPCION_PATTERN = re.compile(r'(?:##?.*Descripción[:\s]*|Descripción[:\s]*)\n(.*?)(?=\n\s*##?[^#]|\nFuncionalidad|\nLibrerías|\nParámetros|\nUso|\nEjecución|\nEjemplo|\nDependencias|\nRequisitos|$)', re.DOTALL | re.IGNORECASE)
+USO_PATTERN = re.compile(r'(?:##?.*(?:Uso|Ejecución)[^\n]*|(?:Uso|Ejecución)[^\n]*)\n(.*?)(?=\n\s*##?[^#]|\nEjemplo|\nDependencias|\nRequisitos|\nLibrerías|\nParámetros|$)', re.DOTALL | re.IGNORECASE)
+EJEMPLO_PATTERN = re.compile(r'(?:##?.*Ejemplo[^\n]*|Ejemplo[^\n]*)\n(.*?)(?=\n\s*##?[^#]|\nDependencias|\nRequisitos|\nLibrerías|\nParámetros|$)', re.DOTALL | re.IGNORECASE)
+DEPENDENCIAS_PATTERN = re.compile(r'(?:##?.*Dependencias?[:\s]*|Dependencias?[:\s]*)\n(.*?)(?=\n\s*##?[^#]|\nRequisitos|\nUso|\nEjecución|\nEjemplo|$)', re.DOTALL | re.IGNORECASE)
+REQUISITOS_PATTERN = re.compile(r'(?:##?.*Requisitos?[:\s]*|Requisitos?[:\s]*)\n(.*?)(?=\n\s*##?[^#]|\nUso|\nEjecución|\nEjemplo|\nDependencias|$)', re.DOTALL | re.IGNORECASE)
 
 
 def truncar_inteligente(texto: Optional[str], max_chars: int = 200) -> str:
@@ -107,6 +129,19 @@ def limpiar_texto(match) -> Optional[str]:
     text = truncar_inteligente(text, 200)
     
     return text if text else None
+
+def normalizar_header(contenido: str, ruta_script: str) -> str:
+    """Normaliza el header según el lenguaje, eliminando prefijos de comentario"""
+    if not contenido:
+        return contenido
+    if ruta_script.endswith('.sh'):
+        lineas = []
+        for linea in contenido.split('\n'):
+            linea = re.sub(r'^#\s?', '', linea)
+            lineas.append(linea)
+        return '\n'.join(lineas)
+    return contenido
+
 
 def validar_readme(info: Dict) -> List[str]:
     """Valida que el README tenga todas las secciones y retorna lista de problemas"""
@@ -152,7 +187,16 @@ def extraer_info_script(ruta_script: str) -> Dict:
             with open(ruta_script, 'r', encoding='utf-8') as f:
                 script_raw = f.read()
                 bloque = HEADER_PATTERN.search(script_raw)
-                contenido = bloque.group(0) if bloque else ''
+                if bloque:
+                    contenido = next(g for g in bloque.groups() if g is not None)
+                else:
+                    contenido = ''
+            
+            # Normalizar header según el lenguaje
+            contenido = normalizar_header(contenido, ruta_script)
+        
+        # Eliminar formato markdown que interfiere con regex
+        contenido = re.sub(r'\*\*', '', contenido)
         
         # Extracción de campos
         version = NAME_VERSION_PATTERN.search(contenido)

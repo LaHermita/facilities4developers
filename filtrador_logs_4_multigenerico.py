@@ -2,16 +2,22 @@
 # -*- coding: utf-8 -*-
 
 """
-Archivo: filtrador_logs_4_multigenerico.py
+Filtrador y clasificador de logs de acceso Apache
 
-Analizador/filtrado de access.log (Apache) con:
- - separación de resultados GET / POST (Markdown + CSV)
- - lista blanca de IPs / CIDR / wildcards 'X'
- - umbral configurable (UMBRAL_SCORE)
- - barra de progreso manual (sin dependencias)
- - mensajes con colores ANSI y emojis
- - clasificación de peticiones (ENTRANTE_OK, ENTRANTE_PELIGROSO, SALIENTE_PELIGROSO, DESCARTADA)
- - nombres y comentarios en castellano para facilitar mantenimiento
+Versión: 1.0.0
+
+Descripción:
+Analiza access.log de Apache para detectar y clasificar peticiones maliciosas por severidad, separando resultados GET/POST con exportación a Markdown y CSV.
+
+Dependencias:
+- re
+- csv
+- time
+- os
+- sys
+- datetime
+- urllib.parse
+- ipaddress
 """
 
 import re

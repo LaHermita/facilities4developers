@@ -341,6 +341,18 @@ cat accesslog_filtrado_POST_*.md > combined_POST.md
 ### 🔄 Mantenimiento rutinario
 
 
+## Ejemplo
+
+Analizar un archivo access.log y generar informes de amenazas:
+
+```bash
+python3 filtrador_logs_4_multigenerico.py
+```
+
+Salida esperada: archivos `accesslog_filtrado_GET_YYYYMMDD.md`, `accesslog_filtrado_POST_YYYYMMDD.md` y sus respectivos CSV con las peticiones clasificadas por severidad.
+
+---
+
 ### 📋 Información del proyecto
 
 **Versión:** 1.0.0  

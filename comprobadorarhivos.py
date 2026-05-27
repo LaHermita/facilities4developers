@@ -1,12 +1,21 @@
 """
-- Nombre del archivo: comprobadorarchivos.py
-- Versión: 1.0
+Auditor de recursos multimedia para proyectos web
 
-- Descripción corta: 
-Este script es una herramienta de auditoría para desarrolladores web diseñada para asegurar la integridad de los recursos multimedia antes de un despliegue. Analiza de forma recursiva archivos de código fuente buscando referencias a imágenes y audio, contrastándolas con el sistema de archivos local para detectar rutas rotas o archivos faltantes de manera automática.
+Versión: 1.0.0
 
-- Funcionalidad: 
-El programa recorre el árbol de directorios del proyecto ignorando carpetas irrelevantes o pesadas (como node_modules), extrae rutas de archivos mediante expresiones regulares y verifica la existencia física de cada recurso detectado. Ofrece una salida visual clara por consola con códigos de colores y permite la exportación opcional de un reporte técnico en formato Markdown.
+Descripción:
+Analiza recursivamente archivos de código fuente buscando referencias a imágenes y audio, verificando su existencia física en el sistema de archivos y generando reportes visuales o Markdown.
+
+Dependencias:
+- os
+- re
+- argparse
+
+Uso:
+python comprobadorarhivos.py [-d DIRECTORIO] [-e REPORTE.md]
+
+Ejemplo:
+python comprobadorarhivos.py -d /var/www/proyecto -e informe.md
 """
 
 import os

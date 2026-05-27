@@ -1,22 +1,20 @@
 <#
-================================================================================
-copia_seguridad_docker.ps1 V1.0
+Copia de seguridad con Docker Compose
+
+Versión: 1.0.0
 
 Descripción:
-Este script realiza una copia de seguridad comprimida (.zip) de una carpeta 
-especificada (o de la carpeta actual si no se indica ninguna), deteniendo 
-temporalmente un servicio Docker Compose antes del proceso y reiniciándolo 
-después.
+Realiza una copia de seguridad comprimida (.zip) de una carpeta, deteniendo y reiniciando automáticamente el servicio Docker Compose antes y después del proceso.
 
-Funcionalidad:
-- Toma como parámetro la ruta de la carpeta a respaldar.
-- Si no se indica ruta, usa la carpeta actual.
-- Detiene el servicio Docker Compose asociado antes de comprimir.
-- Comprime la carpeta completa (incluyendo subcarpetas y archivos bloqueados) usando 7-Zip.
-- Reinicia el servicio Docker Compose una vez finalizado el backup.
-- Valida si el archivo de respaldo se ha creado correctamente.
+Dependencias:
+- Docker Compose
+- 7-Zip
 
-================================================================================
+Uso:
+.\copiadeseguridad_docker_4w10.ps1 [-carpetaOrigen <ruta>]
+
+Ejemplo:
+.\copiadeseguridad_docker_4w10.ps1 -carpetaOrigen C:\Docker\wordpress
 #>
 
 param (

@@ -17,38 +17,47 @@ El objetivo es mantener una biblioteca de scripts **reutilizables** y **bien doc
 
 ## Índice de scripts
 
-### ⚠️  comprobadorarhivos (v1.0)
+### ✅ comprobadorarhivos (v1.0.0)
 - **Archivo:** `comprobadorarhivos.py`
-- **Descripción:** Herramienta de auditoría para verificar integridad de recursos multimedia en proyectos web. Detecta automáticamente references rotas o archivos faltantes mediante análisis recursivo de código fuente.
-- **Uso:** `python comprobadorarhivos.py [opciones] **Parámetros:** | Parámetro | Opción Larga | Descripción | Valor por defecto | | :--- | :--- | :--- | :--- | | `-d` | `--directorio` | Ruta del directorio raíz...`
-- **Dependencias:** `Módulos estándar de Python (sin instalación adicional requerida): - `os` - Operaciones del sistema de archivos - `re` - Procesamiento de expresiones regulares - `argparse` - Procesamiento de...`
-- **Requisitos:** `- **Lenguaje:** Python 3.6+ - **Sistema Operativo:** Linux, macOS, Windows - **Permisos:** Acceso de lectura a los directorios del proyecto`
-- **Ejemplo:** `Caso de uso 1: Analizar el directorio actual y mostrar resultados en consola python comprobadorarhivos.py Caso de uso 2: Analizar un proyecto específico y exportar reporte python...`
+- **Descripción:** Analiza recursivamente archivos de código fuente buscando referencias a imágenes y audio, verificando su existencia física en el sistema de archivos y generando reportes visuales o Markdown.
+- **Uso:** `python comprobadorarhivos.py [-d DIRECTORIO] [-e REPORTE.md]`
+- **Dependencias:** `- os - re - argparse`
+- **Ejemplo:** `python comprobadorarhivos.py -d /var/www/proyecto -e informe.md`
 
 ---
 
-### ⚠️  controladordeversiones (v1.0)
-- **Archivo:** `controladordeversiones.py`
-- **Descripción:** Script que observa una carpeta y renombra automáticamente archivos copiados que contienen `" copy"` en su nombre, generando versiones numeradas del tipo `_v001`, `_v002`, etc. Útil para entornos...
-- **Uso:** `python 0controladordeversiones.py python 0controladordeversiones.py /ruta/a/mi/carpeta`
-- **Requisitos:** `- Python 3.6 o superior - Módulos utilizados: os, sys, time, re`
-- **Ejemplo:** `Sin ejemplo`
+### ✅ controladorversionescarpetas (v2.1)
+- **Archivo:** `controladorversionescarpetas.py`
+- **Descripción:** Observa una carpeta y renombra automáticamente subcarpetas cuyo nombre contenga un patrón configurable (por defecto "(copia)"), generando versiones numeradas secuenciales (_cv001, _cv002, ...).
+- **Uso:** `python controladorversionescarpetas.py [ruta_a_observar]`
+- **Dependencias:** `- os - time - re - sys`
+- **Ejemplo:** `python controladorversionescarpetas.py /home/usuario/miscarpetas`
 
 ---
 
-### ⚠️  copiadeseguridad_docker_4w10 (v1.0)
+### ✅ controladorversionescarpetasmanual (v1.1)
+- **Archivo:** `controladorversionescarpetasmanual.py`
+- **Descripción:** Crea copias versionadas (snapshots) de carpetas de trabajo ignorando automáticamente archivos y directorios definidos en .gitignore.
+- **Uso:** `python controladorversionescarpetasmanual.py <carpeta>`
+- **Dependencias:** `- pathspec (instalación externa)`
+- **Ejemplo:** `python controladorversionescarpetasmanual.py MiProyecto`
+
+---
+
+### ✅ copiadeseguridad_docker_4w10 (v1.0.0)
 - **Archivo:** `copiadeseguridad_docker_4w10.ps1`
-- **Descripción:** Este script realiza una copia de seguridad comprimida (.zip) de una carpeta especificada (o de la carpeta actual si no se indica ninguna), deteniendo temporalmente un servicio Docker Compose antes...
-- **Uso:** `Sin uso`
-- **Ejemplo:** `Sin ejemplo`
+- **Descripción:** Realiza una copia de seguridad comprimida (.zip) de una carpeta, deteniendo y reiniciando automáticamente el servicio Docker Compose antes y después del proceso.
+- **Uso:** `.\copiadeseguridad_docker_4w10.ps1 [-carpetaOrigen <ruta>]`
+- **Dependencias:** `- Docker Compose - 7-Zip`
+- **Ejemplo:** `.\copiadeseguridad_docker_4w10.ps1 -carpetaOrigen C:\Docker\wordpress`
 
 ---
 
-### ⚠️  filtrador_logs_4_multigenerico (v1.0)
+### ✅ filtrador_logs_4_multigenerico (v1.0.0)
 - **Archivo:** `filtrador_logs_4_multigenerico.py`
 - **Descripción:** Este script en Python 3 analiza registros de acceso de Apache (`access.log`) para detectar y clasificar peticiones potencialmente maliciosas. Separa y prioriza intentos de explotación y escaneos de...
-- **Uso:** `Sin uso`
-- **Ejemplo:** `Sin ejemplo`
+- **Uso:** `python3 filtrador_logs_4_multigenerico.py`
+- **Ejemplo:** `Analizar un archivo access.log y generar informes de amenazas: python3 filtrador_logs_4_multigenerico.py Salida esperada: archivos `accesslog_filtrado_GET_YYYYMMDD.md`,...`
 
 ---
 
