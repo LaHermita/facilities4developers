@@ -12,6 +12,11 @@
 
 El objetivo es mantener una biblioteca de scripts **reutilizables** y **bien documentados** para reducir la fricción en las tareas rutinarias y servir como recurso de referencia rápida.
 
+## Documentación
+
+- [Guía de cabeceras de scripts](GUIA_CABECERAS_SCRIPTS.md)
+- [Estado del proyecto](ESTADO_PROYECTO.md)
+
 ***
 
 
@@ -58,6 +63,15 @@ El objetivo es mantener una biblioteca de scripts **reutilizables** y **bien doc
 - **Descripción:** Este script en Python 3 analiza registros de acceso de Apache (`access.log`) para detectar y clasificar peticiones potencialmente maliciosas. Separa y prioriza intentos de explotación y escaneos de...
 - **Uso:** `python3 filtrador_logs_4_multigenerico.py`
 - **Ejemplo:** `Analizar un archivo access.log y generar informes de amenazas: python3 filtrador_logs_4_multigenerico.py Salida esperada: archivos `accesslog_filtrado_GET_YYYYMMDD.md`,...`
+
+---
+
+### ✅ generar_mapa (v1.0.1)
+- **Archivo:** `generar_mapa.py`
+- **Descripción:** Genera un archivo Markdown con el mapa de proyectos de cualquier directorio a partir de los manifest.json de cada carpeta.
+- **Uso:** `python generar_mapa.py [directorio] [--output nombre_archivo.md] [--debug]`
+- **Dependencias:** `- os - sys - json - argparse - datetime - pathlib - typing`
+- **Ejemplo:** `python generar_mapa.py . python generar_mapa.py /ruta/proyectos python generar_mapa.py . --output MI_MAPA.md --debug`
 
 ---
 

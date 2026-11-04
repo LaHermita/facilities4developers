@@ -1,15 +1,28 @@
 #!/usr/bin/env python3
 """
 Generador de MAP - Mapa de Proyectos
-Genera un archivo Markdown con el mapa de proyectos de cualquier directorio.
+
+Versión: 1.0.1
+
+Descripción:
+Genera un archivo Markdown con el mapa de proyectos de cualquier directorio a partir de los manifest.json de cada carpeta.
+
+Dependencias:
+- os
+- sys
+- json
+- argparse
+- datetime
+- pathlib
+- typing
 
 Uso:
-    python generar_mapa.py [directorio] [--output nombre_archivo.md] [--debug]
+python generar_mapa.py [directorio] [--output nombre_archivo.md] [--debug]
 
 Ejemplo:
-    python generar_mapa.py .
-    python generar_mapa.py /ruta/proyectos
-    python generar_mapa.py . --output MI_MAPA.md --debug
+python generar_mapa.py .
+python generar_mapa.py /ruta/proyectos
+python generar_mapa.py . --output MI_MAPA.md --debug
 """
 
 import os

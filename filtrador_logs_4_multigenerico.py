@@ -18,6 +18,13 @@ Dependencias:
 - datetime
 - urllib.parse
 - ipaddress
+
+Uso:
+python3 filtrador_logs_4_multigenerico.py
+
+Ejemplo:
+Coloca access.log en el directorio actual y ejecuta:
+python3 filtrador_logs_4_multigenerico.py
 """
 
 import re

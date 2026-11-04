@@ -1,20 +1,25 @@
 """
 Generador de índice de scripts desde READMEs
 
-Versión: 1.0.0
+Versión: 1.0.1
 
 Descripción:
 Genera el README.md principal del repositorio extrayendo información de los archivos *_README.md de cada script o, como fallback, de sus cabeceras internas.
 
 Dependencias:
+- ast
 - os
 - re
 - typing
 
 Uso:
-python x-generar_indice-proyectos-extraido-readmes.py
+python generar_readme.py
+
+Ejemplo:
+python generar_readme.py
 """
 
+import ast
 import os
 import re
 from typing import Dict, List, Optional
@@ -22,7 +27,7 @@ from typing import Dict, List, Optional
 REPO_DIR = '.'
 OUTPUT_README = 'README.md'
 SCRIPT_EXTENSIONS = ('.py', '.sh', '.ps1')
-ARCHIVOS_EXCLUIDOS = {'x-generar_indice-proyectos-extraido-readmes.py'}
+ARCHIVOS_EXCLUIDOS = {os.path.basename(__file__)}
 
 # 📊 Sistema de logging y validación
 class ReporteValidacion:
@@ -77,16 +82,17 @@ README_HEADER = """\
 
 El objetivo es mantener una biblioteca de scripts **reutilizables** y **bien documentados** para reducir la fricción en las tareas rutinarias y servir como recurso de referencia rápida.
 
+## Documentación
+
+- [Guía de cabeceras de scripts](GUIA_CABECERAS_SCRIPTS.md)
+- [Estado del proyecto](ESTADO_PROYECTO.md)
+
 ***
 """
 
-# Detecta bloques de cabecera en Python ("""...""") y PowerShell (<#...#>)
-HEADER_PATTERN = re.compile(
-    r'"""([\s\S]*?)"""'               # Python docstring (inner content)
-    r'|<#([\s\S]*?)#>'                 # PowerShell comment block (inner content)
-    r'|^#={3,}\n?([\s\S]*?)\n?^#={3,}',# Bash separator block (inner content)
-    re.MULTILINE
-)
+# Detecta bloques de cabecera en PowerShell (<#...#>) y Bash (# ====)
+PS_HEADER_PATTERN = re.compile(r'<#([\s\S]*?)#>')
+BASH_SEPARATOR_PATTERN = re.compile(r'^#\s*={3,}')
 
 # Regex para extraer información
 NAME_VERSION_PATTERN = re.compile(r'V(?:ersión:?)?\s*(\d+\.\d+(?:\.\d+)?)', re.IGNORECASE)
@@ -143,19 +149,46 @@ def normalizar_header(contenido: str, ruta_script: str) -> str:
     return contenido
 
 
+def extraer_cabecera_python(script_raw: str) -> str:
+    """Extrae el docstring del módulo usando el AST de Python."""
+    try:
+        arbol = ast.parse(script_raw)
+        return ast.get_docstring(arbol) or ''
+    except (SyntaxError, ValueError):
+        return ''
+
+
+def extraer_cabecera_powershell(script_raw: str) -> str:
+    """Extrae el primer bloque de comentario <# ... #>."""
+    bloque = PS_HEADER_PATTERN.search(script_raw)
+    return bloque.group(1) if bloque else ''
+
+
+def extraer_cabecera_bash(script_raw: str) -> str:
+    """Extrae el contenido entre las dos primeras líneas separadoras # ===."""
+    lineas = script_raw.splitlines()
+    inicio = None
+
+    for indice, linea in enumerate(lineas):
+        if not BASH_SEPARATOR_PATTERN.match(linea):
+            continue
+        if inicio is None:
+            inicio = indice + 1
+        else:
+            return '\n'.join(lineas[inicio:indice])
+
+    return ''
+
+
 def validar_readme(info: Dict) -> List[str]:
     """Valida que el README tenga todas las secciones y retorna lista de problemas"""
     problemas = []
     
     if info['descripcion'] == 'Sin descripción':
         problemas.append('Falta sección Descripción')
-    if info['uso'] == 'Sin uso':
-        problemas.append('Falta sección Uso/Ejecución')
-    if info['ejemplo'] == 'Sin ejemplo':
-        problemas.append('Falta sección Ejemplo')
-    if info['version'] == '1.0':
-        problemas.append('Versión no especificada (usa por defecto 1.0)')
-    
+    if not info['version']:
+        problemas.append('Versión no especificada')
+
     return problemas
 
 def extraer_info_script(ruta_script: str) -> Dict:
@@ -182,16 +215,20 @@ def extraer_info_script(ruta_script: str) -> Dict:
                 except Exception as e:
                     raise Exception(f"Error al leer README: {str(e)}")
         
-        # Si no hay README externo, leer el bloque de cabecera del script
+        # Si no hay README externo, leer la cabecera del propio script
         if not contenido:
             with open(ruta_script, 'r', encoding='utf-8') as f:
                 script_raw = f.read()
-                bloque = HEADER_PATTERN.search(script_raw)
-                if bloque:
-                    contenido = next(g for g in bloque.groups() if g is not None)
-                else:
-                    contenido = ''
-            
+
+            if ruta_script.endswith('.py'):
+                contenido = extraer_cabecera_python(script_raw)
+            elif ruta_script.endswith('.ps1'):
+                contenido = extraer_cabecera_powershell(script_raw)
+            elif ruta_script.endswith('.sh'):
+                contenido = extraer_cabecera_bash(script_raw)
+            else:
+                contenido = ''
+
             # Normalizar header según el lenguaje
             contenido = normalizar_header(contenido, ruta_script)
         
@@ -216,7 +253,7 @@ def extraer_info_script(ruta_script: str) -> Dict:
         info = {
             'archivo': os.path.basename(ruta_script),
             'nombre': base_name,
-            'version': version.group(1).strip() if version else '1.0',
+            'version': version.group(1).strip() if version else None,
             'descripcion': desc_limpia,
             'uso': uso_limpia,
             'ejemplo': ejemplo_limpia,
@@ -258,7 +295,8 @@ def generar_indice_scripts():
                     reporte.agregar_procesado(info['nombre'], estado)
                 
                 # Construir entrada del índice
-                contenido += f"### {estado} {info['nombre']} (v{info['version']})\n"
+                version_mostrada = info['version'] or '1.0'
+                contenido += f"### {estado} {info['nombre']} (v{version_mostrada})\n"
                 contenido += f"- **Archivo:** `{info['archivo']}`\n"
                 contenido += f"- **Descripción:** {info['descripcion']}\n"
                 contenido += f"- **Uso:** `{info['uso']}`\n"
