@@ -1,7 +1,7 @@
 """
 Generador de índice de scripts desde READMEs
 
-Versión: 1.0.1
+Versión: 1.0.3
 
 Descripción:
 Genera el README.md principal del repositorio extrayendo información de los archivos *_README.md de cada script o, como fallback, de sus cabeceras internas.
@@ -13,10 +13,10 @@ Dependencias:
 - typing
 
 Uso:
-python generar_readme.py
+python generar_readme_automatico.py
 
 Ejemplo:
-python generar_readme.py
+python generar_readme_automatico.py
 """
 
 import ast
@@ -74,9 +74,9 @@ README_HEADER = """\
 
 ## ⚡ Estado del Repositorio y Tecnologías
 [![Status](https://img.shields.io/badge/Status-Activo-green)]()
-[![Python](https://img.shields.io/badge/Scripts-Python-blue?logo=python&logoColor=white)](./python)
-[![Bash](https://img.shields.io/badge/Scripts-Bash-lightgrey?logo=gnu-bash&logoColor=white)](./bash)
-[![PowerShell](https://img.shields.io/badge/Scripts-PowerShell-5391FE?logo=powershell&logoColor=white)](./powershell)
+![Python](https://img.shields.io/badge/Scripts-Python-blue?logo=python&logoColor=white)
+![Bash](https://img.shields.io/badge/Scripts-Bash-lightgrey?logo=gnu-bash&logoColor=white)
+![PowerShell](https://img.shields.io/badge/Scripts-PowerShell-5391FE?logo=powershell&logoColor=white)
 
 ## 🎯 Enfoque Principal
 
@@ -84,8 +84,8 @@ El objetivo es mantener una biblioteca de scripts **reutilizables** y **bien doc
 
 ## Documentación
 
-- [Guía de cabeceras de scripts](GUIA_CABECERAS_SCRIPTS.md)
-- [Estado del proyecto](ESTADO_PROYECTO.md)
+- [Guía de cabeceras de scripts](<docs/GUIA Cabeceras Scripts.md>)
+- [Estado del proyecto](<docs/SPEC - Estado Proyecto.md>)
 
 ***
 """

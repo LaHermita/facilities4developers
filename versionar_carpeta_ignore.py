@@ -2,19 +2,19 @@
 """
 Versionador local de carpetas con soporte .gitignore
 
-Versión: 1.1
+Versión: 1.1.1
 
 Descripción:
-Crea copias versionadas (snapshots) de carpetas de trabajo ignorando automáticamente archivos y directorios definidos en .gitignore.
+Crea copias versionadas (snapshots) de una carpeta ignorando automáticamente los archivos y directorios definidos en su .gitignore.
 
 Dependencias:
-- pathspec (instalación externa)
+- pathspec
 
 Uso:
-python controladorversionescarpetasmanual.py <carpeta>
+python versionar_carpeta_ignore.py <carpeta>
 
 Ejemplo:
-python controladorversionescarpetasmanual.py MiProyecto
+python versionar_carpeta_ignore.py MiProyecto
 """
 
 import re
@@ -218,13 +218,13 @@ if __name__ == "__main__":
         print("Uso:")
         print("")
         print(
-            "    python controladorversionescarpetasmanual.py <carpeta>"
+            "    python versionar_carpeta_ignore.py <carpeta>"
         )
         print("")
         print("Ejemplo:")
         print("")
         print(
-            "    python controladorversionescarpetasmanual.py MiProyecto"
+            "    python versionar_carpeta_ignore.py MiProyecto"
         )
         print("")
 

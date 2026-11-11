@@ -2,7 +2,7 @@
 
 Eres un experto en documentación y buenas prácticas de desarrollo.
 
-Tu tarea es generar una CABECERA DE DOCUMENTACIÓN estandarizada para un script, siguiendo el formato definido en este prompt. La cabecera debe ser **parseable automáticamente** por el indexador del repositorio (`generar_readme.py`).
+Tu tarea es generar una CABECERA DE DOCUMENTACIÓN estandarizada para un script, siguiendo el formato definido en este prompt. La cabecera debe ser **parseable automáticamente** por el indexador del repositorio (`generar_readme_automatico.py`).
 
 > Guía práctica para autores de scripts: ver `GUIA_CABECERAS_SCRIPTS.md`.
 

@@ -1,6 +1,6 @@
 # Guía de cabeceras para scripts
 
-> Cómo documentar un script para que `generar_readme.py` lo indexe correctamente y el README del repositorio quede siempre completo.
+> Cómo documentar un script para que `generar_readme_automatico.py` lo indexe correctamente y el README del repositorio quede siempre completo.
 
 ## 1. Formato canónico
 
@@ -129,9 +129,9 @@ Ejemplo:
 # ============================================================
 ```
 
-## 5. Cómo lo procesa `generar_readme.py`
+## 5. Cómo lo procesa `generar_readme_automatico.py`
 
-Versión actual del generador: `1.0.1`.
+Versión actual del generador: `1.0.3`.
 
 1. Busca un `{nombre_script}_README.md` o `{nombre_script}_readme.md`.
 2. Si existe, lo usa como fuente de la entrada del índice.
@@ -154,7 +154,7 @@ Versión actual del generador: `1.0.1`.
 - [ ] Incluye `Ejemplo:` con un caso real.
 - [ ] No hay markdown dentro de la cabecera.
 - [ ] El nombre del script en `Uso` es el nombre actual del archivo.
-- [ ] Se ejecutó `python3 generar_readme.py` y el script aparece como `✅`.
+- [ ] Se ejecutó `python3 generar_readme_automatico.py` y el script aparece como `✅`.
 - [ ] Si existe un `*_README.md`, está sincronizado con la cabecera.
 
 ## 7. Errores comunes
@@ -182,7 +182,7 @@ Versión actual del generador: `1.0.1`.
 Antes de dar por terminado un script:
 
 ```bash
-python3 generar_readme.py
+python3 generar_readme_automatico.py
 ```
 
 Revisa el reporte final:

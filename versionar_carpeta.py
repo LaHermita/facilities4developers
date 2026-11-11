@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Controlador de versiones automático para subcarpetas copiadas
+Versionador automático de subcarpetas copiadas
 
-Versión: 2.1
+Versión: 2.1.1
 
 Descripción:
-Observa una carpeta y renombra automáticamente subcarpetas cuyo nombre contenga un patrón configurable (por defecto "(copia)"), generando versiones numeradas secuenciales (_cv001, _cv002, ...).
+Observa una carpeta y renombra automáticamente las subcarpetas copiadas que contienen un texto configurable, generando versiones numeradas _cv001, _cv002, etc.
 
 Dependencias:
 - os
@@ -14,10 +14,10 @@ Dependencias:
 - sys
 
 Uso:
-python controladorversionescarpetas.py [ruta_a_observar]
+python versionar_carpeta.py [ruta_a_observar]
 
 Ejemplo:
-python controladorversionescarpetas.py /home/usuario/miscarpetas
+python versionar_carpeta.py /home/usuario/miscarpetas
 """
 
 import os

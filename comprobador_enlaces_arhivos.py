@@ -1,7 +1,7 @@
 """
 Auditor de recursos multimedia para proyectos web
 
-Versión: 1.0.0
+Versión: 1.0.2
 
 Descripción:
 Analiza recursivamente archivos de código fuente buscando referencias a imágenes y audio, verificando su existencia física en el sistema de archivos y generando reportes visuales o Markdown.
@@ -12,10 +12,10 @@ Dependencias:
 - argparse
 
 Uso:
-python comprobadorarhivos.py [-d DIRECTORIO] [-e REPORTE.md]
+python comprobador_enlaces_arhivos.py [-d DIRECTORIO] [-e REPORTE.md]
 
 Ejemplo:
-python comprobadorarhivos.py -d /var/www/proyecto -e informe.md
+python comprobador_enlaces_arhivos.py -d /var/www/proyecto -e informe.md
 """
 
 import os

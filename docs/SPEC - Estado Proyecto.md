@@ -77,4 +77,43 @@ También se probaron de forma aislada la extracción de una cabecera Bash y de u
 3. Dar prioridad a la cabecera del script sobre los `*_README.md` externos.
 4. Añadir `--check` y `--strict` para validar el índice en pre-commit o CI.
 5. Añadir tests de las tres sintaxis de cabecera (`.py`, `.ps1`, `.sh`).
-6. Arreglar los enlaces de los badges del README, que apuntan a carpetas inexistentes.
+
+## Fase 2 - Renombrado de scripts y normalización de cabeceras
+
+- **Fecha:** 2026-11-11
+- **Estado:** completada
+- **Alcance:** `generar_readme_automatico.py`, cabeceras de scripts, `README.md`, `AGENTS.md` y `docs/`.
+
+### Objetivo
+
+Dejar todos los scripts indexables sin avisos, alinear los nombres con su función y trasladar toda la documentación a `docs/`.
+
+### Cambios realizados
+
+| Archivo | Cambio |
+| --- | --- |
+| `comprobadorarhivos.py` | Renombrado a `comprobador_enlaces_arhivos.py`; `Uso`/`Ejemplo` actualizados; versión `1.0.2`. |
+| `controladorversionescarpetas.py` | Renombrado a `versionar_carpeta.py`; cabecera canónica; versión `2.1.1`. |
+| `controladorversionescarpetasmanual.py` | Renombrado a `versionar_carpeta_ignore.py`; cabecera canónica; versión `1.1.1`. |
+| `generar_mapa.py` | Renombrado a `generar_mapa_vivero.py`; cabecera canónica; versión `1.19.1`. |
+| `generar_cartografia.py` | Cabecera canónica; versión `2.3.1`. |
+| `generar_cartografia_total.py` | Cabecera canónica; versión `2.8.1`. |
+| `generar_cartografia_total_cacsa.py` | Cabecera canónica; versión `2.5.1`. |
+| `generar_arbol_contenidos_md.py` | Cabecera canónica; versión `1.4.2`. |
+| `backup_viveros.py` | Renombrado a `backup_carpeta_zip.py`; cabecera añadida; versión `1.0.0`. |
+| `generar_readme.py` | Renombrado a `generar_readme_automatico.py`; enlaces a `docs/`, badges sin destinos inexistentes; versión `1.0.3`. |
+| `AGENTS.md` | Nuevo. Convenciones de estructura, nombres, cabeceras y validación. |
+| `.gitignore` | Añadidos `__pycache__/`, `*.pyc`, `.venv/` y `venv/`. |
+
+### Verificación
+
+```bash
+python3 -m py_compile *.py
+python3 generar_readme_automatico.py
+```
+
+```text
+PROCESADOS: 10
+INCOMPLETOS: 0
+ERRORES: 0
+```
