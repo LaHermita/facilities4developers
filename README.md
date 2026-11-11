@@ -31,12 +31,12 @@ El objetivo es mantener una biblioteca de scripts **reutilizables** y **bien doc
 
 ---
 
-### ✅ comprobador_enlaces_arhivos (v1.0.2)
-- **Archivo:** `comprobador_enlaces_arhivos.py`
+### ✅ comprobador_enlaces_archivos (v1.0.3)
+- **Archivo:** `comprobador_enlaces_archivos.py`
 - **Descripción:** Analiza recursivamente archivos de código fuente buscando referencias a imágenes y audio, verificando su existencia física en el sistema de archivos y generando reportes visuales o Markdown.
-- **Uso:** `python comprobador_enlaces_arhivos.py [-d DIRECTORIO] [-e REPORTE.md]`
+- **Uso:** `python comprobador_enlaces_archivos.py [-d DIRECTORIO] [-e REPORTE.md]`
 - **Dependencias:** `- os - re - argparse`
-- **Ejemplo:** `python comprobador_enlaces_arhivos.py -d /var/www/proyecto -e informe.md`
+- **Ejemplo:** `python comprobador_enlaces_archivos.py -d /var/www/proyecto -e informe.md`
 
 ---
 

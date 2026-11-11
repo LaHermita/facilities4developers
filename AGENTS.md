@@ -127,7 +127,7 @@ Si añades o renombras documentación, actualiza los enlaces del bloque `README_
 ## 7. Documentación en `docs/`
 
 - Un tema por archivo, título claro y contenido accionable.
-- Al cerrar una fase de trabajo, añade una entrada fechada en `docs/SPEC - Estado Proyecto.md`.
+- Al cerrar una fase de trabajo, actualiza el estado y la verificación en `docs/SPEC - Estado Proyecto.md`. No dejes referencia a nombres de archivo retirados.
 - Los enlaces desde `README.md` deben apuntar a `docs/<archivo>` con la ruta correcta.
 - Mantén `docs/GUIA Cabeceras Scripts.md` y `docs/PROMPT - Generar Cabecera Scripts.md` sincronizados con el comportamiento real de `generar_readme_automatico.py`.
 
