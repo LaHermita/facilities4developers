@@ -2,7 +2,7 @@
 """
 Generador de mapas de proyectos
 
-Versión: 1.19.1
+Versión: 1.21.0
 
 Descripción:
 Genera un archivo Markdown con el mapa de proyectos de un directorio a partir de los manifest.json de cada carpeta.
@@ -35,7 +35,7 @@ from typing import Optional
 
 
 # --- CONFIGURACIÓN ---
-VERSION_SISTEMA = "1.19.1"
+VERSION_SISTEMA = "1.21.0"
 DEBUG = False
 NOMBRE_MAPA_DEFAULT = "MAP - Proyectos.md"
 
@@ -61,15 +61,38 @@ ICONOS_STACK = {
     'Shell': '💻',
     'Bash': '🖥️',
     'C': '🔧',
-    'C++': '🔧',
+    'C++': '⚙️',
+    'Cpp': '⚙️',
+    'CPP': '⚙️',
     'Java': '☕',
     'Go': '🔷',
     'Rust': '🦀',
     'TypeScript': '🔷',
     'TS': '🔷',
     'Electron/Neutralino': '⚝',
+    # IAs / agentes
+    'AGENTS': '🤖',
+    'Agents': '🤖',
+    'Agent': '🤖',
+    'Agentes': '🤖',
+    'IA': '🤖',
+    'AI': '🤖',
+    # Documentos / prompts
+    'Documentos': '📚',
+    'Documentación': '📚',
+    'Docs': '📚',
+    'Prompt': '📝',
+    'Prompts': '📝',
+    'Markdown': '📝',
+    'MD': '📝',
+    # Texto plano (por defecto)
+    'Texto': '📄',
+    'Text': '📄',
 }
 ICONO_DEFAULT = '📄'
+
+# Índice normalizado (minúsculas) para aceptar variantes como "c++", "Cpp" o " docs "
+ICONOS_STACK_NORMALIZADOS = {clave.lower(): icono for clave, icono in ICONOS_STACK.items()}
 
 
 def log_debug(mensaje: str) -> None:
@@ -79,10 +102,10 @@ def log_debug(mensaje: str) -> None:
 
 
 def icono_stack(stack: Optional[str]) -> str:
-    """Devuelve un icono según el stack del proyecto."""
-    if not stack:
+    """Devuelve un icono según el stack del proyecto (sin distinguir mayúsculas)."""
+    if not stack or not isinstance(stack, str):
         return ICONO_DEFAULT
-    return ICONOS_STACK.get(stack, ICONO_DEFAULT)
+    return ICONOS_STACK_NORMALIZADOS.get(stack.strip().lower(), ICONO_DEFAULT)
 
 
 def leer_manifest_mapa(ruta_base: str) -> dict:

@@ -1,0 +1,15 @@
+{
+  "name": "facilities4developers",
+  "short_name": "Facilities 4 Developers",
+  "description": "Scripts y herramientas para desarrolladores",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1e1e1e",
+  "theme_color": "#1e1e1e",
+  "lang": "es-ES",
+  "icons": [],
+
+  "stack": "Python",
+  "enlacedocvivero": ""
+}
