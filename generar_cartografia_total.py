@@ -2,7 +2,7 @@
 """
 Generador de cartografía total de proyectos LH
 
-Versión: 2.8.1
+Versión: 2.9.0
 
 Descripción:
 Genera cartografia_lh_total.png y cartografia_lh_total.md a partir de los mapas MAP - *.md, con masonry global por bloque y etiqueta de ruta.
@@ -33,15 +33,16 @@ from datetime import datetime
 
 from PIL import Image, ImageDraw, ImageFont
 
-VERSION = "2.8.1"
+VERSION = "2.9.0"
 
 BLOQUE_ACTIVOS = "Proyectos activos"
 BLOQUE_PAUSADOS = "Proyectos pausados"
 
 RUTAS_ESCANEO = [
     {"titulo": "Webs LH", "ruta": "/home/jparra/SynologyDrive/zhtdocslh"},
-    {"titulo": "Devel Agents Mochila", "ruta": "/media/jparra/Mochila/Desarrollo/Agentes&MCPs"},
+    {"titulo": "Devel Agents Mochila", "ruta": "/media/jparra/Mochila/Devel Agentes"},
     {"titulo": "Devels Python Mochila", "ruta": "/media/jparra/Mochila/Desarrollo/Python"},
+    {"titulo": "Juegos Hent TRAD", "ruta": "/media/jparra/Mochila/Devel_Traducciones"},
 ]
 
 RUTAS_PAUSADAS = [
@@ -55,7 +56,7 @@ BLOQUES_RUTAS = (
 
 PATRON_MAPA = re.compile(r"^MAP - .+\.md$", re.IGNORECASE)
 PATRON_CV = re.compile(r"_cv\d+", re.IGNORECASE)
-PROFUNDIDAD_MAXIMA = 1
+PROFUNDIDAD_MAXIMA = 2
 DIRS_RUIDO = {
     "node_modules", ".git", ".opencode", "__pycache__", "site-packages",
     ".entorno", "vendor", ".venv", "venv", "dist", "build", ".cache",
@@ -312,6 +313,25 @@ def filtrar_mapas(rutas, raiz, incluir_cv, profundidad_maxima):
             continue
         incluidas.append(ruta)
     return incluidas, excluidos
+
+
+def desambiguar_titulos(config):
+    """Renombra títulos repetidos dentro de un bloque para que no se fusionen sus grupos."""
+    usados = set()
+    for entrada in config:
+        bloque = entrada.get("bloque", "")
+        original = entrada.get("titulo") or os.path.basename(entrada["ruta"].rstrip("/"))
+        titulo = original
+        sufijo = 2
+        while (bloque, titulo) in usados:
+            titulo = f"{original} ({sufijo})"
+            sufijo += 1
+        if titulo != original:
+            print(f"Aviso: título duplicado '{original}' en el bloque '{bloque}', "
+                  f"se usa '{titulo}'.", file=sys.stderr)
+        usados.add((bloque, titulo))
+        entrada["titulo"] = titulo
+    return config
 
 
 def escanear_rutas(config, incluir_ruido, incluir_cv, profundidad_maxima):
@@ -791,7 +811,8 @@ def main():
     analizador.add_argument("--incluir-cv", action="store_true",
                             help="Incluir variantes de carpeta _cvNNN (por defecto se omiten).")
     analizador.add_argument("--profundidad", type=int, default=PROFUNDIDAD_MAXIMA,
-                            help="Profundidad máxima de subcarpetas para los mapas (1 = solo el mapa de cada zona).")
+                            help="Profundidad máxima de subcarpetas para los mapas "
+                                 "(2 = incluye <zona>/<proyecto>/docs/MAP - *.md).")
     analizador.add_argument("--solo-proyectos", action="store_true",
                             help="Mostrar solo los mapas de tipo proyectos.")
     analizador.add_argument("--listar", action="store_true", help="Solo listar los mapas encontrados.")
@@ -809,7 +830,8 @@ def main():
         ]
 
     mapas, excluidos = escanear_rutas(
-        config, argumentos.incluir_ruido, argumentos.incluir_cv, argumentos.profundidad
+        desambiguar_titulos(config), argumentos.incluir_ruido,
+        argumentos.incluir_cv, argumentos.profundidad
     )
 
     if not mapas:

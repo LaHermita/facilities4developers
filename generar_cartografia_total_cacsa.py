@@ -2,10 +2,10 @@
 """
 Generador de cartografía corporativa CACSA
 
-Versión: 2.5.1
+Versión: 2.6.0
 
 Descripción:
-Genera cartografia_cacsa.png y cartografia_cacsa.md a partir de los mapas MAP - *.md de las rutas CAC, con paleta corporativa y masonry global.
+Genera cartografia_cacsa.png y cartografia_cacsa.md a partir de los mapas MAP - *.md de las rutas CAC, con paleta corporativa, masonry por bloque y bloque final de proyectos pausados.
 
 Dependencias:
 - argparse
@@ -18,10 +18,10 @@ Dependencias:
 - Pillow
 
 Uso:
-python generar_cartografia_total_cacsa.py [--raiz RUTA] [--salida IMAGEN.png]
+python generar_cartografia_total_cacsa.py [--raiz RUTA] [--salida IMAGEN.png] [--sin-pausados]
 
 Ejemplo:
-python generar_cartografia_total_cacsa.py --salida cartografia_cacsa.png
+python generar_cartografia_total_cacsa.py --salida cartografia_cacsa.png --sin-pausados
 """
 import argparse
 import fnmatch
@@ -33,8 +33,11 @@ from datetime import datetime
 
 from PIL import Image, ImageDraw, ImageFont
 
-VERSION = "2.5.1"
+VERSION = "2.6.0"
 TITULO_LIENZO = "Cartografía Corporativa CACSA"
+
+BLOQUE_ACTIVOS = "Proyectos activos"
+BLOQUE_PAUSADOS = "Proyectos pausados"
 
 RUTAS_ESCANEO = [
     {"titulo": "Scripts Bash CAC", "ruta": "/discosecundario/Desarrollo/Bash"},
@@ -42,6 +45,15 @@ RUTAS_ESCANEO = [
     {"titulo": "Webs PHP CAC", "ruta": "/discosecundario/Webs/htdocs"},
     {"titulo": "Webs Java CAC", "ruta": "/discosecundario/Webs/webapps"},
 ]
+
+RUTAS_PAUSADAS = [
+    {"titulo": "Devels Python pausados", "ruta": "/discosecundario/Desarrollo_Pausado/Python"},
+]
+
+BLOQUES_RUTAS = (
+    (BLOQUE_ACTIVOS, RUTAS_ESCANEO),
+    (BLOQUE_PAUSADOS, RUTAS_PAUSADAS),
+)
 
 PATRON_MAPA = re.compile(r"^MAP - .+\.md$", re.IGNORECASE)
 PATRON_CV = re.compile(r"_cv\d+", re.IGNORECASE)
@@ -88,6 +100,12 @@ TINTES = {
 }
 ACENTO_SIN_MANIFIESTO = (80, 84, 136)
 TINTE_SIN_MANIFIESTO = (228, 230, 244)
+ACENTO_PAUSADO = (96, 104, 120)
+TINTE_PAUSADO = (230, 234, 240)
+ESTILOS_BLOQUE = {
+    BLOQUE_ACTIVOS: {"acento": ACENTOS["proyectos"], "tinte": TINTES["proyectos"]},
+    BLOQUE_PAUSADOS: {"acento": ACENTO_PAUSADO, "tinte": TINTE_PAUSADO},
+}
 
 FUENTES_CANDIDATAS = {
     "normal": [
@@ -232,7 +250,7 @@ def extraer_componentes(texto, base, comprobar_manifest=True):
     return componentes
 
 
-def analizar_mapa(ruta, raiz, grupo=""):
+def analizar_mapa(ruta, raiz, grupo="", bloque=""):
     with open(ruta, encoding="utf-8", errors="replace") as archivo:
         texto = archivo.read()
     frontmatter = leer_frontmatter(texto)
@@ -244,6 +262,7 @@ def analizar_mapa(ruta, raiz, grupo=""):
     return {
         "ruta": ruta,
         "grupo": grupo,
+        "bloque": bloque,
         "ruta_relativa": ruta_relativa,
         "zona": ruta_relativa.split("/")[0],
         "titulo": extraer_titulo(texto, ruta),
@@ -297,12 +316,32 @@ def filtrar_mapas(rutas, raiz, incluir_cv, profundidad_maxima):
     return incluidas, excluidos
 
 
+def desambiguar_titulos(config):
+    """Renombra títulos repetidos dentro de un bloque para que no se fusionen sus grupos."""
+    usados = set()
+    for entrada in config:
+        bloque = entrada.get("bloque", "")
+        original = entrada.get("titulo") or os.path.basename(entrada["ruta"].rstrip("/"))
+        titulo = original
+        sufijo = 2
+        while (bloque, titulo) in usados:
+            titulo = f"{original} ({sufijo})"
+            sufijo += 1
+        if titulo != original:
+            print(f"Aviso: título duplicado '{original}' en el bloque '{bloque}', "
+                  f"se usa '{titulo}'.", file=sys.stderr)
+        usados.add((bloque, titulo))
+        entrada["titulo"] = titulo
+    return config
+
+
 def escanear_rutas(config, incluir_ruido, incluir_cv, profundidad_maxima):
     mapas = []
     excluidos = []
     vistos = set()
     for entrada in config:
         titulo = entrada.get("titulo") or os.path.basename(entrada["ruta"].rstrip("/"))
+        bloque = entrada.get("bloque", "")
         raiz = os.path.abspath(os.path.expanduser(entrada["ruta"]))
         if not os.path.isdir(raiz):
             print(f"Aviso: ruta no encontrada, se omite: {raiz}", file=sys.stderr)
@@ -314,9 +353,9 @@ def escanear_rutas(config, incluir_ruido, incluir_cv, profundidad_maxima):
             if real in vistos:
                 continue
             vistos.add(real)
-            mapas.append(analizar_mapa(ruta, raiz, titulo))
+            mapas.append(analizar_mapa(ruta, raiz, titulo, bloque))
         for ruta_relativa, motivo in descartes:
-            excluidos.append((titulo, ruta_relativa, motivo))
+            excluidos.append((bloque, titulo, ruta_relativa, motivo))
     return mapas, excluidos
 
 
@@ -324,12 +363,24 @@ def agrupar_mapas(mapas):
     grupos = []
     indice = {}
     for mapa in mapas:
-        grupo = mapa.get("grupo", "")
-        if grupo not in indice:
-            indice[grupo] = len(grupos)
-            grupos.append((grupo, []))
-        grupos[indice[grupo]][1].append(mapa)
+        clave = (mapa.get("bloque", ""), mapa.get("grupo", ""))
+        if clave not in indice:
+            indice[clave] = len(grupos)
+            grupos.append((clave[0], clave[1], []))
+        grupos[indice[clave]][2].append(mapa)
     return grupos
+
+
+def agrupar_bloques(mapas):
+    bloques = []
+    indice = {}
+    for mapa in mapas:
+        bloque = mapa.get("bloque", "")
+        if bloque not in indice:
+            indice[bloque] = len(bloques)
+            bloques.append((bloque, []))
+        bloques[indice[bloque]][1].append(mapa)
+    return bloques
 
 
 def envolver(dibujo, texto, fuente, ancho_max):
@@ -391,6 +442,8 @@ MEDIDAS = {
     "separacion": 22,
     "margen_lienzo": 40,
     "alto_encabezado": 150,
+    "alto_bloque": 58,
+    "gap_grupo": 26,
     "margen_lateral": 18,
     "margen_superior": 20,
     "alto_badge": 24,
@@ -480,8 +533,12 @@ def dibujar_tarjeta(dibujo, mapa, x, y, diseno, fuentes):
     m = MEDIDAS
     ancho = m["ancho"]
     alto = diseno["alto"]
-    acento = ACENTOS.get(mapa["tipo"], ACENTOS["proyectos"])
-    tinte = TINTES.get(mapa["tipo"], TINTES["proyectos"])
+    if mapa.get("bloque") == BLOQUE_PAUSADOS:
+        acento = ACENTO_PAUSADO
+        tinte = TINTE_PAUSADO
+    else:
+        acento = ACENTOS.get(mapa["tipo"], ACENTOS["proyectos"])
+        tinte = TINTES.get(mapa["tipo"], TINTES["proyectos"])
     ml = m["margen_lateral"]
 
     dibujo.rectangle([x + 2, y + 3, x + ancho + 2, y + alto + 3], fill=SOMBRA)
@@ -569,6 +626,16 @@ def dibujar_leyenda(dibujo, centro_x, y, fuente):
         x += 16 + dibujo.textlength(etiqueta, font=fuente) + 24
 
 
+def dibujar_bloque(dibujo, titulo, x, y, ancho, fuente):
+    m = MEDIDAS
+    margen = m["margen_lienzo"]
+    alto = m["alto_bloque"]
+    estilo = ESTILOS_BLOQUE.get(titulo, ESTILOS_BLOQUE[BLOQUE_ACTIVOS])
+    dibujo.rectangle([x, y, x + ancho - 2 * margen, y + alto - 16], fill=estilo["tinte"])
+    dibujo.rectangle([x, y, x + 7, y + alto - 16], fill=estilo["acento"])
+    dibujo.text((x + 20, y + 9), titulo.upper(), font=fuente, fill=estilo["acento"])
+
+
 def planificar_seccion(mapas, disenos, columnas, base_y):
     separacion = MEDIDAS["separacion"]
     alturas = [base_y] * columnas
@@ -587,10 +654,12 @@ def generar_imagen(mapas, salida, columnas=0):
     separacion = m["separacion"]
     margen = m["margen_lienzo"]
     alto_encabezado = m["alto_encabezado"]
+    gap_grupo = m["gap_grupo"]
 
     fuentes = cargar_fuentes_tarjeta()
     medidor = ImageDraw.Draw(Image.new("RGB", (1, 1)))
     grupos = agrupar_mapas(mapas)
+    bloques = agrupar_bloques(mapas)
 
     total = len(mapas)
     if columnas <= 0:
@@ -599,9 +668,21 @@ def generar_imagen(mapas, salida, columnas=0):
 
     ancho = margen * 2 + columnas * ancho_tarjeta + (columnas - 1) * separacion
 
-    disenos = [preparar_tarjeta(medidor, mapa, fuentes) for mapa in mapas]
-    asignacion, alto_seccion = planificar_seccion(mapas, disenos, columnas, alto_encabezado)
-    alto = alto_encabezado + alto_seccion + margen
+    planes = []
+    cursor_y = alto_encabezado
+    for bloque, integrantes in bloques:
+        if bloque:
+            planes.append(("bloque", bloque, cursor_y))
+            cursor_y += m["alto_bloque"]
+        disenos = [preparar_tarjeta(medidor, mapa, fuentes) for mapa in integrantes]
+        columnas_bloque = min(columnas, len(integrantes))
+        asignacion, alto_seccion = planificar_seccion(
+            integrantes, disenos, columnas_bloque, cursor_y
+        )
+        planes.append(("seccion", asignacion, columnas_bloque))
+        cursor_y += alto_seccion + gap_grupo
+
+    alto = cursor_y - gap_grupo + margen
 
     imagen = Image.new("RGB", (ancho, alto), FONDO)
     dibujo = ImageDraw.Draw(imagen)
@@ -609,6 +690,7 @@ def generar_imagen(mapas, salida, columnas=0):
     fuente_titulo = cargar_fuente("negrita", 38)
     fuente_sub = cargar_fuente("normal", 17)
     fuente_leyenda = cargar_fuente("normal", 15)
+    fuente_bloque = cargar_fuente("negrita", 20)
     nombre = TITULO_LIENZO
     ancho_nombre = dibujo.textlength(nombre, font=fuente_titulo)
     dibujo.text(((ancho - ancho_nombre) / 2, 30), nombre, font=fuente_titulo, fill=ENCABEZADO)
@@ -627,10 +709,18 @@ def generar_imagen(mapas, salida, columnas=0):
     dibujo.text(((ancho - ancho_sub) / 2, 78), subtitulo, font=fuente_sub, fill=SUBTITULO)
     dibujar_leyenda(dibujo, ancho / 2, 106, fuente_leyenda)
 
-    for columna, tarjetas in enumerate(asignacion):
-        x = margen + columna * (ancho_tarjeta + separacion)
-        for mapa, diseno, tarjeta_y in tarjetas:
-            dibujar_tarjeta(dibujo, mapa, x, tarjeta_y, diseno, fuentes)
+    contenido = ancho - 2 * margen
+    for plan in planes:
+        if plan[0] == "bloque":
+            dibujar_bloque(dibujo, plan[1], margen, plan[2], ancho, fuente_bloque)
+            continue
+        _, asignacion, columnas_seccion = plan
+        ancho_seccion = columnas_seccion * ancho_tarjeta + (columnas_seccion - 1) * separacion
+        desplazamiento = (contenido - ancho_seccion) / 2
+        for columna, tarjetas in enumerate(asignacion):
+            x = margen + desplazamiento + columna * (ancho_tarjeta + separacion)
+            for mapa, diseno, tarjeta_y in tarjetas:
+                dibujar_tarjeta(dibujo, mapa, x, tarjeta_y, diseno, fuentes)
 
     imagen.save(salida)
     return salida, (ancho, alto)
@@ -642,15 +732,19 @@ def escapar_md(texto):
 
 def generar_markdown(mapas, salida, excluidos, config=None):
     grupos = agrupar_mapas(mapas)
-    conteo = {titulo: len(integrantes) for titulo, integrantes in grupos}
+    conteo = {
+        (bloque, titulo): len(integrantes)
+        for bloque, titulo, integrantes in grupos
+    }
     orden = []
     for entrada in config or []:
         titulo = entrada.get("titulo") or os.path.basename(entrada["ruta"].rstrip("/"))
-        if titulo not in orden:
-            orden.append(titulo)
-    for titulo, _ in grupos:
-        if titulo not in orden:
-            orden.append(titulo)
+        clave = (entrada.get("bloque", ""), titulo)
+        if clave not in orden:
+            orden.append(clave)
+    for bloque, titulo, _ in grupos:
+        if (bloque, titulo) not in orden:
+            orden.append((bloque, titulo))
     lineas = [
         f"# {TITULO_LIENZO}",
         "",
@@ -659,15 +753,23 @@ def generar_markdown(mapas, salida, excluidos, config=None):
         "",
         "## Rutas",
         "",
-        "| Ruta | Mapas |",
-        "|------|-------|",
+        "| Bloque | Ruta | Mapas |",
+        "|--------|------|-------|",
     ]
-    for titulo in orden:
-        lineas.append(f"| {escapar_md(titulo)} | {conteo.get(titulo, 0)} |")
+    for bloque, titulo in orden:
+        lineas.append(
+            f"| {escapar_md(bloque)} | {escapar_md(titulo)} | "
+            f"{conteo.get((bloque, titulo), 0)} |"
+        )
     lineas.append("")
-    for titulo, integrantes in grupos:
+    bloque_actual = None
+    for bloque, titulo, integrantes in grupos:
+        if bloque != bloque_actual:
+            if bloque:
+                lineas.extend([f"## {escapar_md(bloque)}", ""])
+            bloque_actual = bloque
         lineas.extend([
-            f"## {escapar_md(titulo)}",
+            f"### {escapar_md(titulo)}",
             "",
             "| # | Mapa | Tipo | Entradas | Sin manifest | Ruta |",
             "|---|------|------|----------|--------------|------|",
@@ -682,8 +784,9 @@ def generar_markdown(mapas, salida, excluidos, config=None):
         lineas.append("")
     lineas.extend(["## Exclusiones aplicadas", ""])
     if excluidos:
-        for grupo, ruta_relativa, motivo in excluidos:
-            lineas.append(f"- `{grupo}/{ruta_relativa}` — {motivo}")
+        for bloque, grupo, ruta_relativa, motivo in excluidos:
+            etiqueta = f"{bloque}/{grupo}/{ruta_relativa}" if bloque else f"{grupo}/{ruta_relativa}"
+            lineas.append(f"- `{etiqueta}` — {motivo}")
     else:
         lineas.append("- (ninguna)")
     lineas.append("")
@@ -708,18 +811,26 @@ def main():
                             help="Incluir variantes de carpeta _cvNNN (por defecto se omiten).")
     analizador.add_argument("--profundidad", type=int, default=PROFUNDIDAD_MAXIMA,
                             help="Profundidad máxima de subcarpetas para los mapas (1 = solo el mapa de cada zona).")
+    analizador.add_argument("--sin-pausados", action="store_true",
+                            help="No incluir el bloque de proyectos pausados.")
     analizador.add_argument("--listar", action="store_true", help="Solo listar los mapas encontrados.")
     argumentos = analizador.parse_args()
 
     if argumentos.raiz:
         raiz = os.path.abspath(os.path.expanduser(argumentos.raiz))
         titulo = argumentos.titulo or os.path.basename(raiz.rstrip(os.sep)) or "Raíz"
-        config = [{"titulo": titulo, "ruta": raiz}]
+        config = [{"titulo": titulo, "ruta": raiz, "bloque": "Ruta personalizada"}]
     else:
-        config = RUTAS_ESCANEO
+        config = [
+            dict(entrada, bloque=bloque)
+            for bloque, rutas in BLOQUES_RUTAS
+            if not (argumentos.sin_pausados and bloque == BLOQUE_PAUSADOS)
+            for entrada in rutas
+        ]
 
     mapas, excluidos = escanear_rutas(
-        config, argumentos.incluir_ruido, argumentos.incluir_cv, argumentos.profundidad
+        desambiguar_titulos(config), argumentos.incluir_ruido,
+        argumentos.incluir_cv, argumentos.profundidad
     )
 
     mapas = [mapa for mapa in mapas if mapa["tipo"] == "proyectos"]
@@ -732,8 +843,8 @@ def main():
         for mapa in mapas:
             sin_manifest = sum(1 for componente in mapa["componentes"] if componente["sin_manifest"])
             detalle = f" · {sin_manifest} sin manifest" if sin_manifest else ""
-            print(f"[{mapa['tipo']:<14}] {mapa['grupo']} :: {mapa['ruta_relativa']}  "
-                  f"({mapa['entradas']} {mapa['etiqueta_entradas']}{detalle})")
+            print(f"[{mapa['tipo']:<14}] {mapa['bloque']} :: {mapa['grupo']} :: "
+                  f"{mapa['ruta_relativa']}  ({mapa['entradas']} {mapa['etiqueta_entradas']}{detalle})")
         print(f"\nTotal: {len(mapas)} mapas.")
         return 0
 

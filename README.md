@@ -67,7 +67,7 @@ El objetivo es mantener una biblioteca de scripts **reutilizables** y **bien doc
 
 ---
 
-### ✅ generar_cartografia_total (v2.8.1)
+### ✅ generar_cartografia_total (v2.9.0)
 - **Archivo:** `generar_cartografia_total.py`
 - **Descripción:** Genera cartografia_lh_total.png y cartografia_lh_total.md a partir de los mapas MAP - *.md, con masonry global por bloque y etiqueta de ruta.
 - **Uso:** `python generar_cartografia_total.py [--raiz RUTA] [--salida IMAGEN.png]`
@@ -85,7 +85,7 @@ El objetivo es mantener una biblioteca de scripts **reutilizables** y **bien doc
 
 ---
 
-### ✅ generar_mapa_vivero (v1.19.1)
+### ✅ generar_mapa_vivero (v1.21.0)
 - **Archivo:** `generar_mapa_vivero.py`
 - **Descripción:** Genera un archivo Markdown con el mapa de proyectos de un directorio a partir de los manifest.json de cada carpeta.
 - **Uso:** `python generar_mapa_vivero.py [directorio] [--output nombre_archivo.md] [--debug]`
