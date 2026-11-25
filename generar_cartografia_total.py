@@ -43,6 +43,7 @@ RUTAS_ESCANEO = [
     {"titulo": "Devel Agents Mochila", "ruta": "/media/jparra/Mochila/Devel Agentes"},
     {"titulo": "Devels Python Mochila", "ruta": "/media/jparra/Mochila/Desarrollo/Python"},
     {"titulo": "Juegos Hent TRAD", "ruta": "/media/jparra/Mochila/Devel_Traducciones"},
+    {"titulo": "Repositorio Github", "ruta": "/discosecundario/RepositorioGithub"}
 ]
 
 RUTAS_PAUSADAS = [
