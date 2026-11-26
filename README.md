@@ -67,7 +67,7 @@ El objetivo es mantener una biblioteca de scripts **reutilizables** y **bien doc
 
 ---
 
-### ✅ generar_cartografia_total (v2.9.0)
+### ✅ generar_cartografia_total (v2.9.1)
 - **Archivo:** `generar_cartografia_total.py`
 - **Descripción:** Genera cartografia_lh_total.png y cartografia_lh_total.md a partir de los mapas MAP - *.md, con masonry global por bloque y etiqueta de ruta.
 - **Uso:** `python generar_cartografia_total.py [--raiz RUTA] [--salida IMAGEN.png]`
@@ -76,12 +76,12 @@ El objetivo es mantener una biblioteca de scripts **reutilizables** y **bien doc
 
 ---
 
-### ✅ generar_cartografia_total_cacsa (v2.5.1)
+### ✅ generar_cartografia_total_cacsa (v2.6.0)
 - **Archivo:** `generar_cartografia_total_cacsa.py`
-- **Descripción:** Genera cartografia_cacsa.png y cartografia_cacsa.md a partir de los mapas MAP - *.md de las rutas CAC, con paleta corporativa y masonry global.
-- **Uso:** `python generar_cartografia_total_cacsa.py [--raiz RUTA] [--salida IMAGEN.png]`
+- **Descripción:** Genera cartografia_cacsa.png y cartografia_cacsa.md a partir de los mapas MAP - *.md de las rutas CAC, con paleta corporativa, masonry por bloque y bloque final de proyectos pausados.
+- **Uso:** `python generar_cartografia_total_cacsa.py [--raiz RUTA] [--salida IMAGEN.png] [--sin-pausados]`
 - **Dependencias:** `- argparse - fnmatch - math - os - re - sys - datetime - Pillow`
-- **Ejemplo:** `python generar_cartografia_total_cacsa.py --salida cartografia_cacsa.png`
+- **Ejemplo:** `python generar_cartografia_total_cacsa.py --salida cartografia_cacsa.png --sin-pausados`
 
 ---
 

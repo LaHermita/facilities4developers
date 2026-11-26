@@ -4,7 +4,7 @@
 
 ## Estado actual
 
-- **Última actualización:** 2026-11-11
+- **Última actualización:** 2026-11-25
 - **Scripts indexados:** 10
 - **Incompletos:** 0
 - **Errores:** 0
@@ -25,9 +25,9 @@
 | `copiadeseguridad_docker_4w10.ps1` | 1.0.0 | Backup con Docker Compose. |
 | `generar_arbol_contenidos_md.py` | 1.4.2 | Árbol de contenidos en Markdown. |
 | `generar_cartografia.py` | 2.3.1 | Cartografía LH en PNG y Markdown. |
-| `generar_cartografia_total.py` | 2.8.1 | Cartografía total LH. |
-| `generar_cartografia_total_cacsa.py` | 2.5.1 | Cartografía corporativa CACSA. |
-| `generar_mapa_vivero.py` | 1.19.1 | Mapa de proyectos desde manifest.json. |
+| `generar_cartografia_total.py` | 2.9.1 | Cartografía total LH. |
+| `generar_cartografia_total_cacsa.py` | 2.6.0 | Cartografía corporativa CACSA. |
+| `generar_mapa_vivero.py` | 1.21.0 | Mapa de proyectos desde manifest.json. |
 | `versionar_carpeta.py` | 2.1.1 | Versiona subcarpetas copiadas. |
 | `versionar_carpeta_ignore.py` | 1.1.1 | Snapshots ignorando .gitignore. |
 

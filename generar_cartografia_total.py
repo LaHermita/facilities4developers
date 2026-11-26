@@ -2,7 +2,7 @@
 """
 Generador de cartografía total de proyectos LH
 
-Versión: 2.9.0
+Versión: 2.9.1
 
 Descripción:
 Genera cartografia_lh_total.png y cartografia_lh_total.md a partir de los mapas MAP - *.md, con masonry global por bloque y etiqueta de ruta.
@@ -33,7 +33,7 @@ from datetime import datetime
 
 from PIL import Image, ImageDraw, ImageFont
 
-VERSION = "2.9.0"
+VERSION = "2.9.1"
 
 BLOQUE_ACTIVOS = "Proyectos activos"
 BLOQUE_PAUSADOS = "Proyectos pausados"
@@ -107,6 +107,13 @@ ESTILOS_BLOQUE = {
     BLOQUE_PAUSADOS: {"acento": ACENTO_PAUSADO, "tinte": TINTE_PAUSADO},
 }
 
+ENTRADAS_LEYENDA = (
+    ("Proyectos", ACENTOS["proyectos"]),
+    ("Snippets", ACENTOS["snippets"]),
+    ("Documentación", ACENTOS["documentacion"]),
+    ("Sin manifiesto", ACENTO_SIN_MANIFIESTO),
+)
+
 FUENTES_CANDIDATAS = {
     "normal": [
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
@@ -133,9 +140,16 @@ def es_emoji(caracter):
     return any(inicio <= codigo <= fin for inicio, fin in RANGOS_EMOJI)
 
 
+def limpiar_markdown(texto):
+    texto = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", texto)
+    texto = re.sub(r"\*\*(.+?)\*\*", r"\1", texto)
+    texto = texto.replace("`", "")
+    return re.sub(r"\s{2,}", " ", texto).strip()
+
+
 def quitar_emoji(texto):
     limpio = "".join(c for c in texto if not es_emoji(c))
-    return re.sub(r"\s{2,}", " ", limpio).strip()
+    return limpiar_markdown(re.sub(r"\s{2,}", " ", limpio).strip())
 
 
 def cargar_fuente(estilo, tam):
@@ -173,7 +187,20 @@ def extraer_resumen(texto, frontmatter):
                 resumen.append(siguiente.lstrip("> ").strip())
             if resumen:
                 return quitar_emoji(" ".join(resumen).strip())
-    return quitar_emoji(frontmatter.get("descripcion", ""))
+    descripcion = quitar_emoji(frontmatter.get("descripcion", "")).strip()
+    if descripcion:
+        return descripcion
+    for indice, linea in enumerate(lineas):
+        if linea.startswith("# "):
+            for siguiente in lineas[indice + 1:]:
+                limpia = siguiente.strip()
+                if not limpia:
+                    continue
+                if limpia.startswith(("#", ">", "|", "-", "*", "```", "---")):
+                    continue
+                return quitar_emoji(limpia)
+            break
+    return ""
 
 
 def extraer_titulo(texto, ruta):
@@ -186,10 +213,13 @@ def extraer_titulo(texto, ruta):
 def clasificar_tipo(frontmatter, ruta):
     tipo = frontmatter.get("tipo", "").strip().lower()
     nombre = os.path.basename(ruta).lower()
+    ruta_normal = "/" + ruta.replace("\\", "/").lower().lstrip("/")
     if "snippet" in tipo or "snippet" in nombre:
         return "snippets"
     if "proyecto" in tipo:
         return "proyectos"
+    if "/docs/" in ruta_normal:
+        return "documentacion"
     if any(clave in tipo for clave in ("documenta", "indice", "índice")) or \
        any(clave in nombre for clave in ("documentacion", "sesion", "indice", "índice")):
         return "documentacion"
@@ -258,7 +288,15 @@ def analizar_mapa(ruta, raiz, grupo="", bloque=""):
     tipo = clasificar_tipo(frontmatter, ruta)
     if tipo == "snippets":
         etiqueta_entradas = "snippets"
+    elif tipo == "documentacion" and etiqueta_entradas == "proyectos":
+        etiqueta_entradas = "documentos"
     ruta_relativa = os.path.relpath(ruta, raiz).replace(os.sep, "/")
+    componentes = extraer_componentes(texto, os.path.dirname(ruta), tipo == "proyectos")
+    nombres = [componente["nombre"] for componente in componentes]
+    repetidos = sorted({nombre for nombre in nombres if nombres.count(nombre) > 1})
+    if repetidos:
+        print(f"Aviso: componentes con nombre repetido en '{ruta_relativa}': "
+              f"{', '.join(repetidos)}.", file=sys.stderr)
     return {
         "ruta": ruta,
         "grupo": grupo,
@@ -274,7 +312,7 @@ def analizar_mapa(ruta, raiz, grupo="", bloque=""):
         "entradas": entradas,
         "etiqueta_entradas": etiqueta_entradas,
         "stacks": extraer_stacks(texto),
-        "componentes": extraer_componentes(texto, os.path.dirname(ruta), tipo == "proyectos"),
+        "componentes": componentes,
     }
 
 
@@ -348,6 +386,9 @@ def escanear_rutas(config, incluir_ruido, incluir_cv, profundidad_maxima):
             continue
         rutas = buscar_mapas(raiz, incluir_ruido)
         incluidas, descartes = filtrar_mapas(rutas, raiz, incluir_cv, profundidad_maxima)
+        if not incluidas:
+            print(f"Aviso: no se han encontrado mapas en '{raiz}' "
+                  f"(ruta '{titulo}').", file=sys.stderr)
         for ruta in incluidas:
             real = os.path.realpath(ruta)
             if real in vistos:
@@ -421,9 +462,16 @@ def recortar_medio(dibujo, texto, fuente, ancho_max):
     if dibujo.textlength(texto, font=fuente) <= ancho_max:
         return texto
     partes = texto.split("/")
-    candidato = f"{partes[0]}/…/{partes[-1]}"
-    if len(partes) > 2 and dibujo.textlength(candidato, font=fuente) <= ancho_max:
-        return candidato
+    if len(partes) == 2:
+        # Conserva la zona y recorta el nombre del archivo por la derecha.
+        return ajustar_linea(dibujo, texto, fuente, ancho_max)
+    if len(partes) > 2:
+        candidato = f"{partes[0]}/…/{partes[-1]}"
+        if dibujo.textlength(candidato, font=fuente) <= ancho_max:
+            return candidato
+        candidato = f"…/{partes[-2]}/{partes[-1]}"
+        if dibujo.textlength(candidato, font=fuente) <= ancho_max:
+            return candidato
     candidato = "…/" + partes[-1]
     if dibujo.textlength(candidato, font=fuente) <= ancho_max:
         return candidato
@@ -573,13 +621,14 @@ def dibujar_tarjeta(dibujo, mapa, x, y, diseno, fuentes):
         cursor += m["alto_resumen"]
     cursor += m["tras_resumen"]
 
+    etiqueta_componentes = "Documentos" if mapa.get("tipo") == "documentacion" else "Componentes"
     grupos = []
     if diseno["chips_sin"]:
         if diseno["chips_con"]:
             grupos.append(("Con manifiesto", diseno["total_con"], acento, tinte, diseno["chips_con"]))
         grupos.append(("Sin manifiesto", diseno["total_sin"], ACENTO_SIN_MANIFIESTO, TINTE_SIN_MANIFIESTO, diseno["chips_sin"]))
     elif diseno["chips_con"]:
-        grupos.append(("Componentes", diseno["total_con"], acento, tinte, diseno["chips_con"]))
+        grupos.append((etiqueta_componentes, diseno["total_con"], acento, tinte, diseno["chips_con"]))
 
     for etiqueta, total, color, fondo, filas in grupos:
         dibujo.text((x + ml, cursor), f"{etiqueta} · {total}", font=fuentes["seccion"], fill=color)
@@ -612,17 +661,15 @@ def pluralizar(cantidad, singular, plural):
     return f"{cantidad} {singular if cantidad == 1 else plural}"
 
 
+def ancho_leyenda(dibujo, fuente):
+    ancho = sum(16 + dibujo.textlength(etiqueta, font=fuente) for etiqueta, _ in ENTRADAS_LEYENDA)
+    return ancho + 24 * (len(ENTRADAS_LEYENDA) - 1)
+
+
 def dibujar_leyenda(dibujo, centro_x, y, fuente):
-    entradas = (
-        ("Proyectos", ACENTOS["proyectos"]),
-        ("Snippets", ACENTOS["snippets"]),
-        ("Documentación", ACENTOS["documentacion"]),
-        ("Sin manifiesto", ACENTO_SIN_MANIFIESTO),
-    )
-    ancho = sum(16 + dibujo.textlength(etiqueta, font=fuente) for etiqueta, _ in entradas)
-    ancho += 24 * (len(entradas) - 1)
+    ancho = ancho_leyenda(dibujo, fuente)
     x = centro_x - ancho / 2
-    for etiqueta, color in entradas:
+    for etiqueta, color in ENTRADAS_LEYENDA:
         dibujo.rounded_rectangle([x, y + 3, x + 10, y + 13], radius=3, fill=color)
         dibujo.text((x + 16, y), etiqueta, font=fuente, fill=TEXTO)
         x += 16 + dibujo.textlength(etiqueta, font=fuente) + 24
@@ -660,6 +707,10 @@ def generar_imagen(mapas, salida, columnas=0):
 
     fuentes = cargar_fuentes_tarjeta()
     medidor = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+    fuente_titulo = cargar_fuente("negrita", 38)
+    fuente_sub = cargar_fuente("normal", 17)
+    fuente_leyenda = cargar_fuente("normal", 15)
+    fuente_bloque = cargar_fuente("negrita", 20)
     grupos = agrupar_mapas(mapas)
     bloques = agrupar_bloques(mapas)
 
@@ -669,6 +720,23 @@ def generar_imagen(mapas, salida, columnas=0):
     columnas = max(1, min(columnas, max(total, 1)))
 
     ancho = margen * 2 + columnas * ancho_tarjeta + (columnas - 1) * separacion
+
+    nombre = "Cartografía de La Hermita"
+    total_componentes = sum(len(mapa["componentes"]) for mapa in mapas)
+    total_sin_manifest = sum(
+        1 for mapa in mapas for componente in mapa["componentes"] if componente["sin_manifest"]
+    )
+    subtitulo = " · ".join((
+        pluralizar(total, "mapa", "mapas"),
+        pluralizar(len(grupos), "ruta", "rutas"),
+        pluralizar(total_componentes, "componente", "componentes"),
+        f"{total_sin_manifest} sin manifiesto",
+        datetime.now().strftime("%Y-%m-%d %H:%M"),
+    ))
+    ancho_nombre = medidor.textlength(nombre, font=fuente_titulo)
+    ancho_sub = medidor.textlength(subtitulo, font=fuente_sub)
+    ancho_encabezado = max(ancho_nombre, ancho_sub, ancho_leyenda(medidor, fuente_leyenda))
+    ancho = max(ancho, int(ancho_encabezado) + 2 * margen)
 
     planes = []
     cursor_y = alto_encabezado
@@ -689,25 +757,7 @@ def generar_imagen(mapas, salida, columnas=0):
     imagen = Image.new("RGB", (ancho, alto), FONDO)
     dibujo = ImageDraw.Draw(imagen)
 
-    fuente_titulo = cargar_fuente("negrita", 38)
-    fuente_sub = cargar_fuente("normal", 17)
-    fuente_leyenda = cargar_fuente("normal", 15)
-    fuente_bloque = cargar_fuente("negrita", 20)
-    nombre = "Cartografía de La Hermita"
-    ancho_nombre = dibujo.textlength(nombre, font=fuente_titulo)
     dibujo.text(((ancho - ancho_nombre) / 2, 30), nombre, font=fuente_titulo, fill=ENCABEZADO)
-    total_componentes = sum(len(mapa["componentes"]) for mapa in mapas)
-    total_sin_manifest = sum(
-        1 for mapa in mapas for componente in mapa["componentes"] if componente["sin_manifest"]
-    )
-    subtitulo = " · ".join((
-        pluralizar(total, "mapa", "mapas"),
-        pluralizar(len(grupos), "ruta", "rutas"),
-        pluralizar(total_componentes, "componente", "componentes"),
-        f"{total_sin_manifest} sin manifiesto",
-        datetime.now().strftime("%Y-%m-%d %H:%M"),
-    ))
-    ancho_sub = dibujo.textlength(subtitulo, font=fuente_sub)
     dibujo.text(((ancho - ancho_sub) / 2, 78), subtitulo, font=fuente_sub, fill=SUBTITULO)
     dibujar_leyenda(dibujo, ancho / 2, 106, fuente_leyenda)
 
@@ -813,7 +863,8 @@ def main():
                             help="Incluir variantes de carpeta _cvNNN (por defecto se omiten).")
     analizador.add_argument("--profundidad", type=int, default=PROFUNDIDAD_MAXIMA,
                             help="Profundidad máxima de subcarpetas para los mapas "
-                                 "(2 = incluye <zona>/<proyecto>/docs/MAP - *.md).")
+                                 "(2 = incluye <zona>/<proyecto>/MAP - *.md; "
+                                 "3 = añade <zona>/<proyecto>/docs/MAP - *.md).")
     analizador.add_argument("--solo-proyectos", action="store_true",
                             help="Mostrar solo los mapas de tipo proyectos.")
     analizador.add_argument("--listar", action="store_true", help="Solo listar los mapas encontrados.")
@@ -856,9 +907,10 @@ def main():
         return 0
 
     salida, medida = generar_imagen(mapas, argumentos.salida, argumentos.columnas)
-    print(f"Generada {salida} ({medida[0]}x{medida[1]} px) con {len(mapas)} mapas.")
+    print(f"Generada {os.path.abspath(salida)} ({medida[0]}x{medida[1]} px) "
+          f"con {len(mapas)} mapas.")
     salida_md = generar_markdown(mapas, argumentos.salida_md, excluidos, config)
-    print(f"Generado {salida_md} con {len(mapas)} mapas.")
+    print(f"Generado {os.path.abspath(salida_md)} con {len(mapas)} mapas.")
     return 0
 
 
